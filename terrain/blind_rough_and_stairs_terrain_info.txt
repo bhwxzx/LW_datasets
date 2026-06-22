@@ -3,7 +3,7 @@
 You can use the following XML snippet to load the generated terrain:
 
 <asset>
-    <hfield name="terrain_hfield" file="blind_rough_and_stairs_terrain.png" size="16.000 16.000 0.866 -1.084" />
+    <hfield name="terrain_hfield" file="blind_rough_and_stairs_terrain.png" size="16.000 16.000 1.500 1.500" />
 </asset>
 
 <worldbody>
