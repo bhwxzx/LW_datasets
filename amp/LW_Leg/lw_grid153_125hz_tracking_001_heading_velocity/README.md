@@ -35,4 +35,25 @@ amp_release="$(realpath ../LW_datasets/amp/LW_Leg/lw_grid153_125hz_tracking_001_
 
 `vx` 从 −0.8 到 +0.8 m/s，每 0.1 m/s 一点。`vy = 0`。`wz` 取 0、±0.10、±0.15、±0.25、±0.35 rad/s。每个非零速度点包含完整动作，采用 `Clamp`。静站轨迹为 41 帧、0.8 s，采用 `Wrap`。[指令和权重](amp_walk_125hz.json)
 
-153 条轨迹均重新通过参考轨迹验收。逐帧用原始广义坐标及广义速度经 Pinocchio 独立计算 `base_link` 速度，与新专家速度旋回世界系的结果比较。线速度和角速度的最大分量误差分别约为 6.66 × 10⁻¹⁶ m/s 和 1.33 × 10⁻¹⁵ rad/s。原有 22 维与上一版逐帧按双精度位模式核对。全库另通过 MuJoCo 正运动学核验。[本版核验结果](release_verification.json) · [逐速度点的巡航跟踪](tracking_by_command.csv) · [步宽、抬脚和机身高度](height_verification.json)
+153 条轨迹均重新通过参考轨迹验收。逐帧用原始广义坐标及广义速度经 Pinocchio 独立计算 `base_link` 速度，与新专家速度旋回世界系的结果比较。线速度和角速度的最大分量误差分别约为 6.66 × 10⁻¹⁶ m/s 和 1.33 × 10⁻¹⁵ rad/s。原有 22 维与上一版逐帧按双精度位模式核对。全库另通过 MuJoCo 正运动学核验。[本版核验结果](release_verification.json) · [步宽、抬脚和机身高度](height_verification.json)
+
+## 最终导出帧测速
+
+每个指令占一行，目标取自文件头的 `Command`，实测 vx、vy、wz 分别取自航向系 `Frames` 的第 0、1、5 列（从零计）。其中 wz 是机身物理角速度在世界竖直轴上的分量。运动轨迹的测量区间为 `[CruiseStart, BrakeStart)`，按帧时钟取左端点、排除右端点。表中 `first_frame`、`end_frame_exclusive` 可直接用于切片。[AMP 逐指令测速表](amp_tracking_by_command.csv)
+
+| 表中字段 | 每档的计算口径 |
+| --- | --- |
+| `frame_mean` | 区间内所有帧等权的算术均值 |
+| `window10_mean` | 每连续 10 帧先求均值，再对所有窗口均值等权平均。窗口步进 1 帧，全部 10 帧都在同一区间内 |
+| `window10_p10`、`window10_p90` | 上述窗口均值分布的第 10、90 百分位，按排序后的窗口均值线性插值 |
+| `signed_error`、`abs_error` | 对应的逐帧均值或窗口均值减去目标指令，以及该差值的绝对值，单位为 m/s 或 rad/s |
+
+152 条运动轨迹共覆盖 41,280 个巡航帧、39,912 个完整十帧窗口。以逐帧均值的绝对误差严格大于 0.01 统计，纵向有 **25 条**超过 0.01 m/s，偏航有 **11 条**超过 0.01 rad/s，其中 4 条两项同时超限。按十帧窗口均值统计，两项分别为 28 条和 10 条。静站行标记为 `phase=stand`，巡航时间两列留空，使用全片 41 帧和 32 个连续窗口，单独汇总。[验收摘要中的 amp_tracking](release_verification.json)
+
+旧表的 `before_*` 和 `after_*` 列保留生成器调参前后的测量记录。[生成器调参记录](tracking_by_command.csv)
+
+在本版本目录执行下列命令可直接从轨迹文件重建 CSV，并同步更新验收摘要中的 `amp_tracking`。脚本使用 Python 3.9 及以上版本的标准库。[测速脚本](amp_tracking_by_command.py)
+
+```bash
+python3 amp_tracking_by_command.py .
+```
